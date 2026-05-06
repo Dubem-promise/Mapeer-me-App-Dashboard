@@ -12,9 +12,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-import os
-path_to_find = os.listdir()
-st.title(str(path_to_find))  # Shows all files in the working directory
+
 # ========== CUSTOM CSS ==========
 st.markdown("""
     <style>
