@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import os
+import random
 from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
@@ -42,29 +43,14 @@ st.markdown("""
         font-size: 0.85rem;
         opacity: 0.9;
     }
-    .filter-container {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-    }
-    .data-table-container {
-        background: white;
-        border-radius: 12px;
-        padding: 1rem;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        overflow-x: auto;
-    }
     </style>
 """, unsafe_allow_html=True)
 
 # ========== FILE PATH HELPER ==========
 def get_file_path(filename):
     """Get correct file path whether running locally or on Streamlit Cloud"""
-    # Try current directory first
     if os.path.exists(filename):
         return filename
-    # Try looking in subdirectories
     for root, dirs, files in os.walk('.'):
         if filename in files:
             return os.path.join(root, filename)
@@ -73,42 +59,48 @@ def get_file_path(filename):
 # ========== CREATE SAMPLE DATA IF NEEDED ==========
 def create_sample_appointments():
     """Create sample appointment data with dates from Nov 2025 to April 2026"""
-    # Generate dates between Nov 2025 and April 2026
     start_date = datetime(2025, 11, 1)
     end_date = datetime(2026, 4, 30)
     
-    # Create 50 sample appointments
     sample_data = []
-    names = [
+    first_names = [
         "Idorenyin", "Mfoniso", "Iniobong", "Aniedi", "Ubong", "Nsikak", "Ime", "Emem", "Usoro", "Abasifreke",
-        "Udeme", "Ifiok", "Imeobong", "Mfon", "Unyime", "Imaobong", "Ekaette", "Ngozi", "Uduak", "Nneka"
+        "Udeme", "Ifiok", "Imeobong", "Mfon", "Unyime", "Imaobong", "Ekaette", "Ngozi", "Uduak", "Nneka",
+        "Iquo", "Aniekeme", "Ima", "Ekaete", "Udodirim", "Abasi", "Iboro", "Ufomba", "Emediong", "Mfonobong"
     ]
     
+    last_names = ["John", "Jane", "Mike", "Sarah", "David", "Lisa", "Paul", "Mary", "James", "Patricia"]
     facilities = ["GWIHR Clinic", "General Hospital", "Care Center", "Unity Health Center", "Mercy Hospital"]
     statuses = ["Scheduled", "Pending", "Completed", "Cancelled"]
+    genders = ["Male", "Female"]
+    marital_statuses = ["Single", "Married", "Divorced"]
+    services = ["HIV Testing", "Consultation", "Medication Refill", "Counseling", "Lab Test"]
+    scheduled_by_list = ["Dr. Emeka", "Nurse Grace", "Dr. Chinasa", "Dr. Okon", "Nurse Blessing"]
     
-    for i in range(50):
+    for i in range(100):  # Create 100 sample appointments
         random_days = random.randint(0, (end_date - start_date).days)
         appointment_date = start_date + timedelta(days=random_days)
         
+        first_name = random.choice(first_names)
+        last_name = random.choice(last_names)
+        full_name = f"{first_name} {last_name}"
+        
         sample_data.append({
             'S/N': i + 1,
-            'USER_NAME': random.choice(names) + " " + random.choice(["John", "Jane", "Mike", "Sarah", "David"]),
+            'USER_NAME': full_name,
             'Phone_Number': f"080{random.randint(10000000, 99999999)}",
             'AGE': random.randint(15, 24),
             'FACILITY': random.choice(facilities),
-            'FACILITY_ADDRESS': f"{random.randint(1, 999)} Health Street",
-            'SCHEDULED_BY': random.choice(["Dr. Emeka", "Nurse Grace", "Dr. Chinasa", "Dr. Okon"]),
-            'GENDER': random.choice(["Male", "Female"]),
-            'MARITAL_STATUS': random.choice(["Single", "Married", "Divorced"]),
-            'SERVICES_NEEDED': random.choice(["HIV Testing", "Consultation", "Medication Refill", "Counseling"]),
+            'FACILITY_ADDRESS': f"{random.randint(1, 999)} Health Street, Uyo",
+            'SCHEDULED_BY': random.choice(scheduled_by_list),
+            'GENDER': random.choice(genders),
+            'MARITAL_STATUS': random.choice(marital_statuses),
+            'SERVICES_NEEDED': random.choice(services),
             'APPOINTMENT_DATE': appointment_date.strftime('%Y-%m-%d'),
             'APPOINTMENT STATUS': random.choice(statuses)
         })
     
     df = pd.DataFrame(sample_data)
-    
-    # Save to Excel
     df.to_excel("MaPeer_Appointments.xlsx", index=False)
     return df
 
@@ -119,7 +111,6 @@ def load_appointments():
     file_path = get_file_path("MaPeer_Appointments.xlsx")
     
     if file_path is None:
-        # Create sample data
         st.info("📝 Creating sample appointment data with dates from Nov 2025 - April 2026...")
         df = create_sample_appointments()
         return df, None
@@ -132,7 +123,6 @@ def load_appointments():
         if 'APPOINTMENT_DATE' in df.columns:
             df['APPOINTMENT_DATE'] = pd.to_datetime(df['APPOINTMENT_DATE'], errors='coerce')
         else:
-            # Try to find any date column
             for col in df.columns:
                 if 'date' in str(col).lower():
                     df[col] = pd.to_datetime(df[col], errors='coerce')
@@ -148,10 +138,9 @@ def load_users_from_csv():
     csv_path = get_file_path("db_mapeers.csv")
     
     if csv_path is None:
-        # Create sample users
         sample_users = pd.DataFrame({
-            'name': ['John Doe', 'Jane Smith', 'Mike Johnson', 'Sarah Williams', 'David Brown'],
-            'email': ['john@example.com', 'jane@example.com', 'mike@example.com', 'sarah@example.com', 'david@example.com'],
+            'name': ['Idorenyin John', 'Mfoniso Jane', 'Iniobong Mike', 'Aniedi Sarah', 'Ubong David'],
+            'email': ['idorenyin@example.com', 'mfoniso@example.com', 'iniobong@example.com', 'aniedi@example.com', 'ubong@example.com'],
             'phone': ['08012345678', '08087654321', '08011223344', '08099887766', '08055667788']
         })
         return sample_users, None
@@ -184,37 +173,31 @@ users_df, users_error = load_users_from_csv()
 notifications_df, notif_error = load_notifications()
 
 # ========== PROCESS APPOINTMENTS BY STATUS ==========
-# Initialize all DataFrames
 scheduled_appointments = pd.DataFrame()
 pending_appointments = pd.DataFrame()
 completed_appointments = pd.DataFrame()
 cancelled_appointments = pd.DataFrame()
 all_appointments = pd.DataFrame()
 
-# Find status column
 status_column = None
 date_column = None
 
 if appointments_df is not None and not appointments_df.empty:
     all_appointments = appointments_df.copy()
     
-    # Find status column
     for col in all_appointments.columns:
         if 'status' in str(col).lower():
             status_column = col
             break
     
-    # Find date column
     for col in all_appointments.columns:
         if 'date' in str(col).lower():
             date_column = col
             break
     
     if status_column:
-        # Create a clean status series
         status_series = all_appointments[status_column].astype(str).str.strip()
         
-        # Filter by status
         scheduled_appointments = all_appointments[status_series == 'Scheduled']
         if len(scheduled_appointments) == 0:
             scheduled_appointments = all_appointments[status_series.str.lower() == 'scheduled']
@@ -231,9 +214,8 @@ if appointments_df is not None and not appointments_df.empty:
         if len(cancelled_appointments) == 0:
             cancelled_appointments = all_appointments[status_series.str.lower() == 'cancelled']
         
-        # Show status info in sidebar
         st.sidebar.success(f"✅ Status Column: '{status_column}'")
-        st.sidebar.write(f"📊 Statuses: {all_appointments[status_column].unique().tolist()}")
+        st.sidebar.write(f"📊 Total Appointments: {len(all_appointments)}")
     else:
         st.sidebar.warning("⚠️ No status column found")
 else:
@@ -241,7 +223,6 @@ else:
 
 # ========== MERGE USERS ==========
 def get_merged_users():
-    """Merge users from CSV and appointments"""
     all_users = {}
     
     if users_df is not None and not users_df.empty:
@@ -259,12 +240,11 @@ def get_merged_users():
                 }
     
     if appointments_df is not None and not appointments_df.empty and status_column:
+        name_col = None
         for col in appointments_df.columns:
             if 'name' in str(col).lower() or 'user' in str(col).lower():
                 name_col = col
                 break
-        else:
-            name_col = None
         
         if name_col:
             for idx, apt in appointments_df.iterrows():
@@ -291,28 +271,23 @@ def get_merged_users():
 
 merged_users_df = get_merged_users()
 total_users = len(merged_users_df)
-active_users = len(merged_users_df[merged_users_df['has_appointment'] == True]) if not merged_users_df.empty else 0
 
-# ========== HELPER FUNCTIONS FOR DATE FILTERING ==========
+# ========== HELPER FUNCTIONS ==========
 def filter_by_date(df, year=None, month=None):
-    """Filter dataframe by year and month based on date column"""
     if df.empty or date_column is None or date_column not in df.columns:
         return df
     
     filtered_df = df.copy()
     
-    # Ensure date column is datetime
     if not pd.api.types.is_datetime64_any_dtype(filtered_df[date_column]):
         filtered_df[date_column] = pd.to_datetime(filtered_df[date_column], errors='coerce')
     
-    # Filter by year
     if year and year != "All" and year is not None:
         try:
             filtered_df = filtered_df[filtered_df[date_column].dt.year == int(year)]
         except:
             pass
     
-    # Filter by month
     if month and month != "All" and month is not None:
         try:
             filtered_df = filtered_df[filtered_df[date_column].dt.month == int(month)]
@@ -322,10 +297,8 @@ def filter_by_date(df, year=None, month=None):
     return filtered_df
 
 def get_available_years(df):
-    """Get available years from date column"""
     if df.empty or date_column is None or date_column not in df.columns:
         return ["All"]
-    
     try:
         years = df[date_column].dt.year.dropna().unique()
         years = sorted([str(int(y)) for y in years if pd.notna(y)])
@@ -337,11 +310,8 @@ def get_available_months():
     return ["All", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]
 
 def get_month_name(month_num):
-    months = {
-        "1": "January", "2": "February", "3": "March", "4": "April",
-        "5": "May", "6": "June", "7": "July", "8": "August",
-        "9": "September", "10": "October", "11": "November", "12": "December"
-    }
+    months = {"1": "January", "2": "February", "3": "March", "4": "April", "5": "May", "6": "June",
+              "7": "July", "8": "August", "9": "September", "10": "October", "11": "November", "12": "December"}
     return months.get(str(month_num), "")
 
 # ========== SIDEBAR ==========
@@ -414,7 +384,6 @@ if st.session_state.current_page == "Dashboard":
     
     st.markdown("---")
     
-    # Status Distribution Chart
     if status_column and not all_appointments.empty:
         st.markdown("### 📊 Appointment Status Distribution")
         
@@ -435,8 +404,7 @@ if st.session_state.current_page == "Dashboard":
                             color='Status', color_discrete_sequence=['#17a2b8', '#ffc107', '#28a745', '#dc3545'])
                 st.plotly_chart(fig, use_container_width=True)
             with col2:
-                fig = px.pie(status_df, values='Count', names='Status', title="Status Distribution",
-                            color_discrete_sequence=['#17a2b8', '#ffc107', '#28a745', '#dc3545'])
+                fig = px.pie(status_df, values='Count', names='Status', title="Status Distribution")
                 st.plotly_chart(fig, use_container_width=True)
 
 # ========== USERS PAGE ==========
@@ -447,161 +415,56 @@ elif st.session_state.current_page == "Users":
         st.info("No user data found")
     else:
         search = st.text_input("🔍 Search users", placeholder="Name or email...")
-        
         filtered = merged_users_df.copy()
         if search:
             filtered = filtered[filtered['name'].str.contains(search, case=False, na=False)]
-        
         st.write(f"**Showing {len(filtered)} of {len(merged_users_df)} users**")
         st.dataframe(filtered, use_container_width=True)
 
 # ========== SCHEDULED APPOINTMENTS PAGE ==========
 elif st.session_state.current_page == "Scheduled Appointments":
     st.markdown("### 🟢 Scheduled Appointments")
-    
     if scheduled_appointments.empty:
         st.info("No scheduled appointments found.")
     else:
         st.metric("Total Scheduled", len(scheduled_appointments))
         st.markdown("---")
-        
-        st.markdown("### 📅 Filter by Date")
-        col1, col2 = st.columns(2)
-        
-        available_years = get_available_years(scheduled_appointments)
-        with col1:
-            selected_year = st.selectbox("Select Year", available_years, key="scheduled_year")
-        
-        with col2:
-            selected_month = st.selectbox("Select Month", get_available_months(), key="scheduled_month", 
-                                         format_func=lambda x: get_month_name(x))
-        
-        filtered_appointments = filter_by_date(scheduled_appointments, selected_year, selected_month)
-        
-        st.write(f"**Showing {len(filtered_appointments)} scheduled appointments**")
-        
-        if date_column and not filtered_appointments.empty and date_column in filtered_appointments.columns:
-            filtered_appointments = filtered_appointments.sort_values(date_column, ascending=True)
-        
-        st.dataframe(filtered_appointments, use_container_width=True)
+        st.dataframe(scheduled_appointments, use_container_width=True)
 
 # ========== PENDING APPOINTMENTS PAGE ==========
 elif st.session_state.current_page == "Pending Appointments":
     st.markdown("### 🟡 Pending Appointments")
-    
     if pending_appointments.empty:
         st.info("No pending appointments found.")
     else:
         st.metric("Total Pending", len(pending_appointments))
-        st.markdown("---")
-        
-        st.markdown("### 📅 Filter by Date")
-        col1, col2 = st.columns(2)
-        
-        available_years = get_available_years(pending_appointments)
-        with col1:
-            selected_year = st.selectbox("Select Year", available_years, key="pending_year")
-        
-        with col2:
-            selected_month = st.selectbox("Select Month", get_available_months(), key="pending_month",
-                                         format_func=lambda x: get_month_name(x))
-        
-        filtered_appointments = filter_by_date(pending_appointments, selected_year, selected_month)
-        
-        st.write(f"**Showing {len(filtered_appointments)} pending appointments**")
-        st.dataframe(filtered_appointments, use_container_width=True)
+        st.dataframe(pending_appointments, use_container_width=True)
 
 # ========== COMPLETED APPOINTMENTS PAGE ==========
 elif st.session_state.current_page == "Completed Appointments":
     st.markdown("### ✅ Completed Appointments")
-    
     if completed_appointments.empty:
         st.info("No completed appointments found.")
     else:
         st.metric("Total Completed", len(completed_appointments))
-        st.markdown("---")
-        
-        st.markdown("### 📅 Filter by Date")
-        col1, col2 = st.columns(2)
-        
-        available_years = get_available_years(completed_appointments)
-        with col1:
-            selected_year = st.selectbox("Select Year", available_years, key="completed_year")
-        
-        with col2:
-            selected_month = st.selectbox("Select Month", get_available_months(), key="completed_month",
-                                         format_func=lambda x: get_month_name(x))
-        
-        filtered_appointments = filter_by_date(completed_appointments, selected_year, selected_month)
-        
-        st.write(f"**Showing {len(filtered_appointments)} completed appointments**")
-        st.dataframe(filtered_appointments, use_container_width=True)
+        st.dataframe(completed_appointments, use_container_width=True)
 
 # ========== ALL APPOINTMENTS PAGE ==========
 elif st.session_state.current_page == "All Appointments":
     st.markdown("### 📅 All Appointments")
-    
     if all_appointments.empty:
         st.warning("No appointments found.")
     else:
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total", len(all_appointments))
-        with col2:
-            st.metric("Scheduled", len(scheduled_appointments))
-        with col3:
-            st.metric("Pending", len(pending_appointments))
-        with col4:
-            st.metric("Completed", len(completed_appointments))
-        
-        st.markdown("---")
-        
-        st.markdown("### 📅 Filter by Date")
-        col1, col2 = st.columns(2)
-        
-        available_years = get_available_years(all_appointments)
-        with col1:
-            selected_year = st.selectbox("Select Year", available_years, key="all_year")
-        
-        with col2:
-            selected_month = st.selectbox("Select Month", get_available_months(), key="all_month",
-                                         format_func=lambda x: get_month_name(x))
-        
-        status_options = ["All", "Scheduled", "Pending", "Completed", "Cancelled"]
-        selected_status = st.selectbox("Filter by Status", status_options)
-        
-        filtered = all_appointments.copy()
-        filtered = filter_by_date(filtered, selected_year, selected_month)
-        
-        if selected_status != "All" and status_column:
-            status_vals = filtered[status_column].astype(str).str.strip()
-            filtered = filtered[status_vals == selected_status]
-            if len(filtered) == 0:
-                filtered = filtered[status_vals.str.lower() == selected_status.lower()]
-        
-        search = st.text_input("🔍 Search", placeholder="Search by name or phone...")
-        if search:
-            for col in filtered.columns:
-                if 'name' in str(col).lower() or 'phone' in str(col).lower():
-                    filtered = filtered[filtered[col].astype(str).str.contains(search, case=False, na=False)]
-                    break
-        
-        st.write(f"**Showing {len(filtered)} appointments**")
-        st.dataframe(filtered, use_container_width=True)
+        st.dataframe(all_appointments, use_container_width=True)
 
 # ========== PUSH REMINDERS PAGE ==========
 elif st.session_state.current_page == "Push Reminders":
     st.markdown("### 🔔 Push Reminders")
-    
     if notifications_df is None or notifications_df.empty:
-        st.info("No notifications file found. Upload 'notifications.xlsx' to see reminders.")
+        st.info("No notifications file found.")
     else:
-        st.success(f"✅ Loaded {len(notifications_df)} push reminders")
         st.dataframe(notifications_df, use_container_width=True)
 
 # ========== FOOTER ==========
 st.markdown("---")
-st.markdown(
-    f"<div style='text-align: center; color: #888;'>MaPeers Dashboard | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>",
-    unsafe_allow_html=True
-)
+st.markdown(f"<div style='text-align: center; color: #888;'>MaPeers Dashboard | {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</div>", unsafe_allow_html=True)
